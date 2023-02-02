@@ -11,18 +11,18 @@ torch.autograd.set_detect_anomaly(True)
 
 
 class minimize:
-    ''' variant: 作为变量的 tensor
-        loss_fcn: 以 variant 为输入, loss 为输出的函数
-        lr: 学习率
-        patience: 允许 loss 无进展的次数
-        eval_fcn: 需要记录的损失函数
-        max_iter: 最大迭代次数
-        prefix: 进度条前缀
-        title: 输出标题
-        return: 最优变量的 tensor, 最小 loss 值, loss 日志'''
+    ''' x: The variable being optimized (torch.tensor)
+        loss_fcn: Loss function with x as input
+        lr: Learning rate
+        patience: Tolerance for no progress in optimization
+        eval_fcn: The loss function used for the evaluation
+        max_iter: Maximum number of iterations
+        prefix: Prefix of the progress bar
+        title: Show the title
+        return: optimal solution, min loss, log of loss'''
 
     def __new__(cls,
-                variant: torch.tensor,
+                x: torch.tensor,
                 loss_fcn: Callable,
                 lr: float,
                 eval_fcn=None,
@@ -32,14 +32,14 @@ class minimize:
                 title: bool = True,
                 leave: bool = True):
         assert patience or max_iter
-        # 初始化变量
-        variant.requires_grad = True
-        cls.variant = variant
-        cls.optimizer = torch.optim.Adam([variant], lr=lr)
-        # 记录最优变量
+        # Initialize the variable
+        x.requires_grad = True
+        cls.x = x
+        cls.optimizer = torch.optim.Adam([x], lr=lr)
+        # Record the optimal solution
         cls.min_loss, cls.best_variant, cls.log = float('inf'), None, []
         if title: LOGGER.info(('%10s' * 3) % ('', 'cur_loss', 'min_loss'))
-        # 设置类变量
+        # Set class properties
         cls.prefix = prefix
         cls.leave = leave
         instance = object.__new__(cls)
@@ -48,20 +48,19 @@ class minimize:
         return instance.best_variant, instance.min_loss, instance.log
 
     def main(self, patience, max_iter):
-        # 初始化迭代参数
+        # Initialize the iteration-dependent parameters
         pbar = tqdm(range(max_iter if max_iter else patience), leave=self.leave)
         angry = 0 if patience else None
         if not max_iter:
-            # 贪心模式
+            # Greedy method
             while angry != patience:
                 is_better = self.update(pbar)
                 angry = 0 if is_better else angry + 1
                 pbar.reset() if is_better else pbar.update()
         else:
-            # 指定次数
             for _ in pbar:
                 is_better = self.update(pbar)
-                # 懒惰模式
+                # Lazy method
                 if patience:
                     angry = 0 if is_better else angry + 1
                     if angry == patience: break
@@ -69,15 +68,15 @@ class minimize:
 
     def update(self, pbar):
         is_better = False
-        # 计算损失值, 记入日志
-        loss = self.loss_fcn(self.variant)
-        loss_value = loss.item() if not self.eval_fcn else self.eval_fcn(self.variant).item()
+        # Calculate the loss value and log it
+        loss = self.loss_fcn(self.x)
+        loss_value = loss.item() if not self.eval_fcn else self.eval_fcn(self.x).item()
         self.log.append(loss_value)
-        # 保存更优的变量
+        # Save the optimal solution
         if loss_value < self.min_loss:
-            self.min_loss, self.best_variant = loss_value, self.variant.clone().detach()
+            self.min_loss, self.best_variant = loss_value, self.x.clone().detach()
             is_better = True
-        # 反向传播梯度, 更新变量
+        # Back propagate the gradient and update the variable
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
@@ -88,9 +87,8 @@ class minimize:
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
-    # 绘制原始值
     x = torch.linspace(-3, 3, 50)
-    # 拟合目标: x + 0.3 x^2 - 0.5 x^3 + 4 sin(x) + 噪声
+    # x + 0.3 x^2 - 0.5 x^3 + 4 sin(x) + noise
     y = x + 0.3 * x ** 2 - 0.5 * x ** 3 + 4 * torch.sin(x) + 5 * (torch.rand(len(x)) - 0.5)
     plt.scatter(x, y, c='deepskyblue', label='true')
 
@@ -106,13 +104,11 @@ if __name__ == '__main__':
 
     def loss(variant):
         pred_y = cal_y(variant, x)
-        # 平方差损失
         return ((y - pred_y) ** 2).sum()
 
 
     best_var, min_loss, log = minimize(torch.ones(4), loss_fcn=loss, lr=1e-1, patience=50, max_iter=2000)
     print(best_var)
-    # 绘制预测值
     plt.plot(x, cal_y(best_var, x), c='orange', label='pred')
 
     plt.legend()
