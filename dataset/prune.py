@@ -3,30 +3,30 @@ from tqdm import tqdm
 
 
 def prune_dataset(image_dir, label_dir, cls_pool=None, min_n_boxes=1):
-    ''' YOLOv7 数据集裁剪
-        cls_pool: 保留的类别
-        min_n_boxes: 每张图片的最少边界框数'''
+    ''' Pruning of the dataset in YOLOv7 format
+        cls_pool: The indexes of the category to keep
+        min_n_boxes: Minimum number of bounding boxes per image'''
     if cls_pool: cls_pool = {cls: i for i, cls in enumerate(
         range(cls_pool) if isinstance(cls_pool, int) else cls_pool)}
-    # 读取图像, 这将会清除没有对应 txt 的图像
+    # Read the image and clear any image that has no corresponding txt
     for image_folder in filter(lambda p: p.is_dir(), image_dir.iterdir()):
         unlink_count = 0
         label_folder = label_dir / image_folder.stem
-        # 创建进度条
+        # Creating a progress bar
         pbar = tqdm(list(image_folder.iterdir()))
         for image in pbar:
             label = label_folder / (image.stem + '.txt')
             temp = label.with_suffix('.tmp')
             unlink_flag = False
-            # 读取标签文件
+            # Read tag files
             if label.is_file():
                 with open(label) as f:
                     bboxes = f.readlines()
-                # 筛除标签
+                # Filter out labels
                 if cls_pool: bboxes = list(filter(
                     lambda bbox: int(bbox.split()[0]) in cls_pool.keys(), bboxes))
                 if len(bboxes) >= min_n_boxes:
-                    # 写入临时标签
+                    # Write temporary labels
                     if cls_pool:
                         with open(temp, 'w') as f:
                             for bbox in bboxes:
@@ -36,16 +36,16 @@ def prune_dataset(image_dir, label_dir, cls_pool=None, min_n_boxes=1):
                 else:
                     unlink_flag = True
             else:
-                # 标签文件为空
+                # The tag file is empty
                 unlink_flag = True
             if unlink_flag:
-                # 删除标签文件、图像
+                # Delete the tag file, the image
                 for file in (image, label): file.unlink(missing_ok=True)
-                # 统计已删除的数据量
+                # Count the amount of deleted data
                 unlink_count += 1
             prune_rate = unlink_count / len(pbar) * 100
             pbar.set_description(f'{image_folder.stem} Pruning Rate {prune_rate:.2f} %')
-    # 临时文件覆盖原文件
+    # Make the temporary file overwrite the original file
     temp_files = list(label_dir.glob('**/*.tmp'))
     if temp_files:
         input('Type anything to start rewriting the label')
@@ -56,7 +56,7 @@ def prune_dataset(image_dir, label_dir, cls_pool=None, min_n_boxes=1):
 
 
 def make_index(image_dir):
-    ''' 为 YOLOv7 数据集制作索引文本'''
+    ''' Make an index file for the dataset'''
     for folder in filter(lambda p: p.is_dir(), image_dir.iterdir()):
         txt = image_dir.parent / (folder.stem + '.txt')
         with open(txt, 'w') as f:
