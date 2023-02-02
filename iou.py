@@ -65,7 +65,7 @@ class IoU_Cal:
             'wh_box': lambda: self.max_coord[..., 2: 4] - self.min_coord[..., :2],
             's_box': lambda: torch.prod(self.wh_box, dim=-1),
             'l2_box': lambda: torch.square(self.wh_box).sum(dim=-1),
-            # The center line of the bounding boxes
+            # The central points' connection of the bounding boxes
             'd_center': lambda: self.pred_xy - self.target_xy,
             'l2_center': lambda: torch.square(self.d_center).sum(dim=-1),
             # IoU
