@@ -38,10 +38,12 @@ class IoU_Cal:
         monotonous: {
             None: origin
             True: monotonic FM
-            False: non-monotonic FM}'''
+            False: non-monotonic FM
+        }
+        momentum: The momentum of running mean'''
     iou_mean = 1.
     monotonous = False
-    _momentum = 1 - pow(0.5, exp=1 / 10)
+    momentum = 1 - pow(0.5, exp=1 / 10)
     _is_train = True
 
     def __init__(self, pred, target):
@@ -91,8 +93,8 @@ class IoU_Cal:
 
     @classmethod
     def _update(cls, self):
-        if cls._is_train: cls.iou_mean = (1 - cls._momentum) * cls.iou_mean + \
-                                         cls._momentum * self.iou.detach().mean().item()
+        if cls._is_train: cls.iou_mean = (1 - cls.momentum) * cls.iou_mean + \
+                                         cls.momentum * self.iou.detach().mean().item()
 
     def _scaled_loss(self, loss, gamma=1.9, delta=3):
         if isinstance(self.monotonous, bool):
@@ -379,4 +381,4 @@ if __name__ == '__main__':
                                        colors=[purple, blue, green, pink]),
                lambda: plot_gain()]
 
-    command[-2]()
+    command[0]()
