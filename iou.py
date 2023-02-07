@@ -63,8 +63,8 @@ class IoU_Cal:
 
     @classmethod
     def _update(cls, self):
-        if cls._is_train: cls.iou_mean = (1 - cls._momentum) * cls.iou_mean + \
-                                         cls._momentum * self.iou.detach().mean().item()
+        if cls._is_train: cls.iou_mean = (1 - cls.momentum) * cls.iou_mean + \
+                                         cls.momentum * self.iou.detach().mean().item()
 
     def _scaled_loss(self, loss, gamma=1.9, delta=3):
         if isinstance(self.monotonous, bool):
