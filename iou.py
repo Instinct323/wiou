@@ -66,14 +66,14 @@ class IoU_Cal:
         if cls._is_train: cls.iou_mean = (1 - cls.momentum) * cls.iou_mean + \
                                          cls.momentum * self.iou.detach().mean().item()
 
-    def _scaled_loss(self, loss, gamma=1.9, delta=3):
+    def _scaled_loss(self, loss, alpha=1.9, delta=3):
         if isinstance(self.monotonous, bool):
+            beta = self.iou.detach() / self.iou_mean
             if self.monotonous:
-                loss *= (self.iou.detach() / self.iou_mean).sqrt()
+                loss *= beta.sqrt()
             else:
-                beta = self.iou.detach() / self.iou_mean
-                alpha = delta * torch.pow(gamma, beta - delta)
-                loss *= beta / alpha
+                divisor = delta * torch.pow(alpha, beta - delta)
+                loss *= beta / divisor
         return loss
 
     @classmethod
