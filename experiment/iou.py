@@ -1,10 +1,10 @@
 import math
 import time
-from pathlib import Path
 
 import matplotlib.patches as pch
 import matplotlib.pyplot as plt
 import torch
+
 from optimize import minimize
 
 red = 'orangered'
