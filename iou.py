@@ -21,7 +21,7 @@ class IoU_Cal:
         ''' n: Number of batches per training epoch
             t: The epoch when mAP's ascension slowed significantly'''
         time_to_real = n * t
-        cls.momentum = 1 - pow(0.01, 1 / time_to_real)
+        cls.momentum = 1 - pow(0.05, 1 / time_to_real)
         return cls.momentum
 
     def __init__(self, pred, target):
