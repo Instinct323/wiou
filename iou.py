@@ -10,11 +10,19 @@ class IoU_Cal:
             True: monotonic FM
             False: non-monotonic FM
         }
-        momentum: The momentum of running mean'''
+        momentum: The momentum of running mean (This can be set by the function <momentum_estimation>)'''
     iou_mean = 1.
     monotonous = False
-    momentum = 1 - pow(0.5, exp=1 / 7000)
+    momentum = 1 - pow(0.5, 1 / 7000)
     _is_train = True
+
+    @classmethod
+    def momentum_estimation(cls, n, t):
+        ''' n: Number of batches per training epoch
+            t: The epoch when mAP's ascension slowed significantly'''
+        time_to_real = n * t
+        cls.momentum = 1 - pow(0.01, 1 / time_to_real)
+        return cls.momentum
 
     def __init__(self, pred, target):
         self.pred, self.target = pred, target
@@ -28,8 +36,8 @@ class IoU_Cal:
             'min_coord': lambda: torch.minimum(self.pred[..., :4], self.target[..., :4]),
             'max_coord': lambda: torch.maximum(self.pred[..., :4], self.target[..., :4]),
             # The overlapping region
-            'wh_inter': lambda: self.min_coord[..., 2: 4] - self.max_coord[..., :2],
-            's_inter': lambda: torch.prod(torch.relu(self.wh_inter), dim=-1),
+            'wh_inter': lambda: torch.relu(self.min_coord[..., 2: 4] - self.max_coord[..., :2]),
+            's_inter': lambda: torch.prod(self.wh_inter, dim=-1),
             # The area covered
             's_union': lambda: torch.prod(self.pred_wh, dim=-1) +
                                torch.prod(self.target_wh, dim=-1) - self.s_inter,
