@@ -13,7 +13,7 @@ class IoU_Cal:
         momentum: The momentum of running mean (This can be set by the function <momentum_estimation>)'''
     iou_mean = 1.
     monotonous = False
-    momentum = 1 - pow(0.5, 1 / 7000)
+    momentum = 1 - pow(0.05, 1 / (890 * 34))
     _is_train = True
 
     @classmethod
