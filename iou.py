@@ -98,7 +98,7 @@ class IoU_Cal:
     @classmethod
     def EIoU(cls, pred, target, self=None):
         self = self if self else cls(pred, target)
-        penalty = self.l2_center / self.l2_box.detach() \
+        penalty = self.l2_center / self.l2_box \
                   + torch.square(self.d_center / self.wh_box).sum(dim=-1)
         return self._scaled_loss(self.iou + penalty)
 
