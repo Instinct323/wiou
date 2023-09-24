@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__
+__openvino_cache__
+*test*
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.idea
+*.exe
+desktop.ini
+
+# datasets and projects
+data
+runs
+.DS_Store
+
+# Neural Network weights 
+*.pt
+*.onnx
+*.pkf

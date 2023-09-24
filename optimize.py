@@ -70,7 +70,7 @@ class minimize:
         is_better = False
         # Calculate the loss value and log it
         loss = self.loss_fcn(self.x)
-        loss_value = loss.item() if not self.eval_fcn else self.eval_fcn(self.x).item()
+        loss_value = loss.item() if not self.eval_fcn else self.eval_fcn(self.x.detach()).item()
         self.log.append(loss_value)
         # Save the optimal solution
         if loss_value < self.min_loss:

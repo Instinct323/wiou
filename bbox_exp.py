@@ -5,7 +5,7 @@ import matplotlib.patches as pch
 import matplotlib.pyplot as plt
 import torch
 
-from iou import IoU_Cal
+from iou import IouLoss
 from optimize import minimize
 
 red = 'orangered'
@@ -65,8 +65,8 @@ def simulate_exp(loss_fcn, lr=.01, max_iter=120,
         target_boxes_areas: The area of the target box
         anchor_boxes_areas: Area of anchor boxes
         aspect_ratios: Aspect ratio of bounding boxes'''
-    IoU = IoU_Cal.IoU
-    IoU_Cal.iou_mean = 1.
+    iloss = IouLoss(1, 1, ltype='IoU', monotonous=None)
+
     aspect_ratios = torch.tensor(aspect_ratios)
     anchor_boxes_areas = torch.tensor(anchor_boxes_areas)
     # The distribution pattern of the regression cases
@@ -102,10 +102,10 @@ def simulate_exp(loss_fcn, lr=.01, max_iter=120,
         plt.show()
     # Construct the loss function and solve it using the function <minimize>
     result, _, log = minimize(anchor.detach(), lambda x: loss_fcn(x, target).mean(), lr=lr,
-                              eval_fcn=lambda x: IoU(x.detach(), target).mean(),
-                              max_iter=max_iter, prefix=loss_fcn.__name__)
-    loss = IoU(result, target).mean(dim=(1, 2))
-    loss_fcn = loss_fcn.__name__
+                              eval_fcn=lambda x: iloss(x.detach(), target).mean(),
+                              max_iter=max_iter, prefix=loss_fcn.ltype)
+    loss = iloss(result, target).mean(dim=(1, 2))
+    loss_fcn = loss_fcn.ltype
     print(f'{loss_fcn}: Mean IoU = {1 - loss.mean():.3f}, Min IoU = {1 - loss.max():.3f}')
     # Draw the heat map of the IoU loss
     # fig = plt.subplot(projection='3d')
@@ -143,7 +143,7 @@ def visualize_track(fcn_and_epoch: dict, lr=.01, colors=COLORS):
     ''' Visual bounding box regression
         fcn_and_epoch: {fcn: epoch ...}'''
     assert len(colors) >= len(fcn_and_epoch), 'Insufficient amount of color provided'
-    IoU = IoU_Cal.IoU
+    iloss = IouLoss(1, 1, ltype='IoU', monotonous=None)
     anchor = xywh_to_ltrb(torch.tensor([[.7, .7, .2, .4],
                                         [.5, .8, .6, .1]]))
     target = xywh_to_ltrb(torch.tensor([[.2, .2, .05, .1],
@@ -171,11 +171,11 @@ def visualize_track(fcn_and_epoch: dict, lr=.01, colors=COLORS):
         for j, (color, fcn) in enumerate(zip(colors, fcn_and_epoch)):
             epoch = fcn_and_epoch[fcn][i]
             result = minimize(anchor[i].clone(), lambda x: fcn(x, target[i]), lr=lr,
-                              eval_fcn=lambda x: IoU(x.detach(), target[i]),
+                              eval_fcn=lambda x: iloss(x, target[i]),
                               max_iter=epoch, patience=None,
-                              prefix=fcn.__name__, title=not any([i, j]))[0]
+                              prefix=fcn.ltype, title=not any([i, j]))[0]
             res = pch.Rectangle(result[:2], *(result[2:] - result[:2]),
-                                facecolor=color, alpha=0.5, label=f'{fcn.__name__} {epoch} epochs')
+                                facecolor=color, alpha=0.5, label=f'{fcn.ltype} {epoch} epochs')
             res.set_zorder(-j)
             fig.add_patch(res)
         plt.legend(frameon=False)
@@ -207,10 +207,13 @@ def plot_gain(gamma=[2.5, 1.9, 1.6, 1.4], delta=[2, 3, 4, 5],
 
 
 if __name__ == '__main__':
-    f = IoU_Cal
-    f.monotonous = None
-    f.momentum = 0.06
+    class FcnGetter:
 
+        def __getattr__(self, item):
+            return IouLoss(n=1, t=40, ltype=item, monotonous=None)
+
+
+    f = FcnGetter()
     # 0: Plot the bounding box regression loss in the simulation experiment
     # 1: Visualize regression cases of simulation experiment
     # 2: Visualize the trajectory of regression cases under the effect of WIoU loss and SIoU loss
