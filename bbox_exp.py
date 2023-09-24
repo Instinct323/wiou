@@ -208,7 +208,6 @@ def plot_gain(gamma=[2.5, 1.9, 1.6, 1.4], delta=[2, 3, 4, 5],
 
 if __name__ == '__main__':
     class FcnGetter:
-
         def __getattr__(self, item):
             return IouLoss(n=1, t=40, ltype=item, monotonous=None)
 
