@@ -12,17 +12,16 @@ class IouLoss:
             True: monotonic FM
             False: non-monotonic FM
         }'''
+    alpha = 1.9
+    delta = 3
 
-    def __init__(self, n, t, ltype='WIoU', monotonous=False, alpha=1.9, delta=3):
+    def __init__(self, n, t, ltype='WIoU', monotonous=False):
         # The momentum of running mean
         time_to_real = n * t
         self.momentum = 1 - pow(0.05, 1 / time_to_real)
 
         self.ltype = ltype
         self.monotonous = monotonous
-
-        self.alpha = alpha
-        self.delta = delta
 
         self.iou_mean = nn.Parameter(torch.tensor(1.), requires_grad=False)
         self._is_train = isinstance(self.monotonous, bool)
@@ -67,7 +66,7 @@ class IouLoss:
             self.iou_mean.mul_(1 - self.momentum)
             self.iou_mean.add_(self.momentum * self.iou.detach().mean().item())
 
-        loss = self._scaled_loss(getattr(self, self.ltype)(**kwargs))
+        loss = self._scaled_loss(getattr(self, f'_{self.ltype}')(**kwargs))
         return (loss, self.iou) if ret_iou else loss
 
     def train(self):
@@ -86,32 +85,32 @@ class IouLoss:
                 loss *= beta / divisor
         return loss
 
-    def IoU(self):
+    def _IoU(self):
         return self.iou
 
-    def WIoU(self):
+    def _WIoU(self):
         dist = torch.exp(self.l2_center / self.l2_box.detach())
         return dist * self.iou
 
-    def EIoU(self):
+    def _EIoU(self):
         penalty = self.l2_center / self.l2_box \
                   + torch.square(self.d_center / self.wh_box).sum(dim=-1)
         return self.iou + penalty
 
-    def GIoU(self):
+    def _GIoU(self):
         return self.iou + (self.s_box - self.s_union) / self.s_box
 
-    def DIoU(self):
+    def _DIoU(self):
         return self.iou + self.l2_center / self.l2_box
 
-    def CIoU(self, eps=1e-4):
+    def _CIoU(self, eps=1e-4):
         v = 4 / math.pi ** 2 * \
             (torch.atan(self.pred_wh[..., 0] / (self.pred_wh[..., 1] + eps)) -
              torch.atan(self.target_wh[..., 0] / (self.target_wh[..., 1] + eps))) ** 2
         alpha = v / (self.iou + v)
         return self.iou + self.l2_center / self.l2_box + alpha.detach() * v
 
-    def SIoU(self, theta=4):
+    def _SIoU(self, theta=4):
         # Angle Cost
         angle = torch.arcsin(torch.abs(self.d_center).min(dim=-1)[0] / (self.l2_center.sqrt() + 1e-4))
         angle = torch.sin(2 * angle) - 2
@@ -127,10 +126,9 @@ class IouLoss:
         return self.iou + (dist + shape) / 2
 
     def __repr__(self):
-        return f'{self.ltype}(' \
-               f'iou_mean={self.iou_mean.item():.3f}, ' \
-               f'm={self.momentum:.3e}, ' \
-               f'train={self._is_train})'
+        return f'{self.__name__}(iou_mean={self.iou_mean.item():.3f})'
+
+    __name__ = property(lambda self: self.ltype)
 
 
 if __name__ == '__main__':
@@ -143,8 +141,10 @@ if __name__ == '__main__':
 
     torch.manual_seed(0)
     iouloss = IouLoss(890, 34, ltype='IoU')
+    iouloss.momentum = 1e-2
+    print(iouloss)
 
     for i in range(10000):
         pred, tar = xywh2xyxy(torch.rand([2, 3, 1, 4], requires_grad=True))
         iouloss(pred, tar)
-    print(iouloss.iou_mean)
+    print(iouloss)

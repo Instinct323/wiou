@@ -103,9 +103,9 @@ def simulate_exp(loss_fcn, lr=.01, max_iter=120,
     # Construct the loss function and solve it using the function <minimize>
     result, _, log = minimize(anchor.detach(), lambda x: loss_fcn(x, target).mean(), lr=lr,
                               eval_fcn=lambda x: iloss(x.detach(), target).mean(),
-                              max_iter=max_iter, prefix=loss_fcn.ltype)
+                              max_iter=max_iter, prefix=loss_fcn.__name__)
     loss = iloss(result, target).mean(dim=(1, 2))
-    loss_fcn = loss_fcn.ltype
+    loss_fcn = loss_fcn.__name__
     print(f'{loss_fcn}: Mean IoU = {1 - loss.mean():.3f}, Min IoU = {1 - loss.max():.3f}')
     # Draw the heat map of the IoU loss
     # fig = plt.subplot(projection='3d')
@@ -173,9 +173,9 @@ def visualize_track(fcn_and_epoch: dict, lr=.01, colors=COLORS):
             result = minimize(anchor[i].clone(), lambda x: fcn(x, target[i]), lr=lr,
                               eval_fcn=lambda x: iloss(x, target[i]),
                               max_iter=epoch, patience=None,
-                              prefix=fcn.ltype, title=not any([i, j]))[0]
+                              prefix=fcn.__name__, title=not any([i, j]))[0]
             res = pch.Rectangle(result[:2], *(result[2:] - result[:2]),
-                                facecolor=color, alpha=0.5, label=f'{fcn.ltype} {epoch} epochs')
+                                facecolor=color, alpha=0.5, label=f'{fcn.__name__} {epoch} epochs')
             res.set_zorder(-j)
             fig.add_patch(res)
         plt.legend(frameon=False)
