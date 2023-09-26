@@ -53,9 +53,6 @@ class IoU_Cal:
         }
         self._update(self)
 
-    def __setitem__(self, key, value):
-        self._fget[key] = value
-
     def __getattr__(self, item):
         if callable(self._fget[item]):
             self._fget[item] = self._fget[item]()
