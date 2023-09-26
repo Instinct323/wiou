@@ -32,7 +32,7 @@ class IouLoss(nn.Module):
             self._fget[item] = self._fget[item]()
         return self._fget[item]
 
-    def __call__(self, pred, target, ret_iou=False, **kwargs):
+    def forward(self, pred, target, ret_iou=False, **kwargs):
         self._fget = {
             # pred, target: x0,y0,x1,y1
             'pred': pred,
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     for i in range(5):
         origin = torch.rand([2, 3, 1, 4], requires_grad=True, device=iouloss.iou_mean.device)
         pred, tar = xywh2xyxy(origin)
-        
+
         loss = iouloss(pred, tar)
         loss.sum().backward()
         print(origin.grad)
