@@ -66,8 +66,9 @@ class IouLoss(nn.Module):
             self.iou_mean.mul_(1 - self.momentum)
             self.iou_mean.add_(self.momentum * self['iou'].detach().mean())
 
-        loss = self._scaled_loss(getattr(self, f'_{self.ltype}')(**kwargs))
-        return (loss, self['iou']) if ret_iou else loss
+        ret = self._scaled_loss(getattr(self, f'_{self.ltype}')(**kwargs)), self['iou']
+        delattr(self, '_fget')
+        return ret if ret_iou else ret[0]
 
     def _scaled_loss(self, loss):
         if isinstance(self.monotonous, bool):
