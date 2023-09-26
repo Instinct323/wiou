@@ -21,10 +21,11 @@ class IouLoss(nn.Module):
         time_to_real = n * t
         self.momentum = 1 - pow(0.05, 1 / time_to_real)
 
+        assert ltype.endswith('IoU') and getattr(self, f'_{ltype}', None), f'The loss function {ltype} does not exist'
         self.ltype = ltype
         self.monotonous = monotonous
 
-        self.iou_mean = nn.Parameter(torch.tensor(1.), requires_grad=False)
+        self.register_buffer('iou_mean', torch.tensor(1.))
 
     def __getitem__(self, item):
         if callable(self._fget[item]):
@@ -63,7 +64,7 @@ class IouLoss(nn.Module):
 
         if self.training:
             self.iou_mean.mul_(1 - self.momentum)
-            self.iou_mean.add_(self.momentum * self['iou'].detach().mean().item())
+            self.iou_mean.add_(self.momentum * self['iou'].detach().mean())
 
         loss = self._scaled_loss(getattr(self, f'_{self.ltype}')(**kwargs))
         return (loss, self['iou']) if ret_iou else loss
@@ -133,11 +134,15 @@ if __name__ == '__main__':
 
 
     torch.manual_seed(0)
-    iouloss = IouLoss(890, 34, ltype='IoU')
+    iouloss = IouLoss(890, 34, ltype='WIoU').cuda()
     iouloss.momentum = 1e-2
     print(iouloss)
 
     for i in range(5):
-        pred, tar = xywh2xyxy(torch.rand([2, 3, 1, 4], requires_grad=True))
-        print(iouloss(pred, tar))
+        origin = torch.rand([2, 3, 1, 4], requires_grad=True, device=iouloss.iou_mean.device)
+        pred, tar = xywh2xyxy(origin)
+        
+        loss = iouloss(pred, tar)
+        loss.sum().backward()
+        print(origin.grad)
     print(iouloss)
