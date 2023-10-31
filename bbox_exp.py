@@ -194,7 +194,7 @@ def plot_gain(gamma=[2.5, 1.9, 1.6, 1.4], delta=[2, 3, 4, 5],
     beta = torch.linspace(0, 8, 100)
     for g, d, c in zip(gamma, delta, colors):
         alpha = d * torch.pow(g, beta - d)
-        plt.plot(beta, beta / alpha, color=c, label=f'α={g}  δ={d}')
+        plt.plot(beta, beta / alpha, color=c, label=rf'$\alpha={g}, \delta={d}$')
     plt.plot(beta, torch.ones_like(beta), color='gray', linestyle='--', alpha=0.7)
     # Sets the format of the axes
     plt.xlabel('outlier degree')
@@ -224,4 +224,4 @@ if __name__ == '__main__':
                                        colors=[purple, blue, green, pink]),
                lambda: plot_gain()]
 
-    command[2]()
+    command[-1]()
