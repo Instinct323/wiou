@@ -183,7 +183,7 @@ def visualize_track(fcn_and_epoch: dict, lr=.01, colors=COLORS):
     plt.show()
 
 
-def plot_gain(gamma=[2.5, 1.9, 1.6, 1.4], delta=[2, 3, 4, 5],
+def plot_gain(alpha=[2.5, 1.9, 1.6, 1.4], delta=[2, 3, 4, 5],
               colors=[pink, blue, yellow, orange]):
     fig = plt.subplot()
     for key in 'right', 'top':
@@ -192,9 +192,9 @@ def plot_gain(gamma=[2.5, 1.9, 1.6, 1.4], delta=[2, 3, 4, 5],
         fig.spines[key].set_position(('data', 0))
     # The outlier degree of bounding box
     beta = torch.linspace(0, 8, 100)
-    for g, d, c in zip(gamma, delta, colors):
-        alpha = d * torch.pow(g, beta - d)
-        plt.plot(beta, beta / alpha, color=c, label=rf'$\alpha={g}, \delta={d}$')
+    for a, d, c in zip(alpha, delta, colors):
+        plt.plot(beta, beta / (d * torch.pow(a, beta - d)),
+                 color=c, label=rf'$\alpha={a}, \delta={d}$')
     plt.plot(beta, torch.ones_like(beta), color='gray', linestyle='--', alpha=0.7)
     # Sets the format of the axes
     plt.xlabel('outlier degree')
