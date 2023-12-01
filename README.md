@@ -5,7 +5,7 @@
   Experimental data is located in this branch only.
 
 - **v2 (Latest):**
-  The refactored version of branch v1, integrating advanced features of `nn.Module` into the `IouLoss`.
+  The refactored version of branch `v1`, integrating advanced features of `nn.Module` into the `IouLoss`.
 
 - **v3 (Dev):**
   The version currently under development, slated for use in my undergraduate graduation project.
