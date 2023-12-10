@@ -183,7 +183,10 @@ def visualize_track(fcn_and_epoch: dict, lr=.01, colors=COLORS):
     plt.show()
 
 
-def plot_gain(alpha=[2.5, 1.9, 1.6, 1.4], delta=[2, 3, 4, 5],
+def plot_gain(alpha_delta_imean=[[2.5, 2, .2],
+                                 [1.9, 3, .2],
+                                 [1.6, 4, .2],
+                                 [1.4, 5, .2]],
               colors=[pink, blue, yellow, orange]):
     fig = plt.subplot()
     for key in 'right', 'top':
@@ -191,14 +194,17 @@ def plot_gain(alpha=[2.5, 1.9, 1.6, 1.4], delta=[2, 3, 4, 5],
     for key in 'left', 'bottom':
         fig.spines[key].set_position(('data', 0))
     # The outlier degree of bounding box
-    beta = torch.linspace(0, 8, 100)
-    for a, d, c in zip(alpha, delta, colors):
-        plt.plot(beta, beta / (d * torch.pow(a, beta - d)),
-                 color=c, label=rf'$\alpha={a}, \delta={d}$')
-    plt.plot(beta, torch.ones_like(beta), color='gray', linestyle='--', alpha=0.7)
+    assert len(alpha_delta_imean) <= len(colors)
+    liou = torch.linspace(0, 1, 100)
+    for adi, c in zip(alpha_delta_imean, colors):
+        iloss = IouLoss(ltype='IoU', monotonous=False)
+        IouLoss.alpha, IouLoss.delta = adi[:2]
+        iloss.iou_mean.mul_(adi[-1])
+        plt.plot(liou, iloss._scaled_loss(torch.ones_like(liou), iou=liou), color=c,
+                 label=r'$\alpha=%.1f, \delta=%.1f, \overline{\mathcal{L}_{IoU}}=%.1f$' % tuple(adi))
+    plt.plot(liou, torch.ones_like(liou), color='gray', linestyle='--', alpha=0.7)
     # Sets the format of the axes
-    plt.xlabel('outlier degree')
-    plt.xticks(*[list(range(0, 9, 2)) * 2])
+    plt.xlabel('IoU loss')
     plt.ylabel('gradient gain')
     plt.yticks(*[[0.5, 1, 1.5] * 2])
     plt.ylim([0, 1.8])

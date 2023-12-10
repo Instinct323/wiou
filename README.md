@@ -16,9 +16,3 @@
     
 - **v2 (master):**
   The refactored version of branch `v1`, integrating advanced features of `nn.Module` into the `IouLoss`.
-
-
-- **v3 (dev):**
-  The version currently under development, slated for use in my undergraduate graduation project.
-  - dataset: `Fire-Smoke` (categories: 2, train: 4320, val: 1330)
-  - citation: coming soon ~
