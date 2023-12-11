@@ -11,8 +11,8 @@ class IouLoss(nn.Module):
             False: non-monotonic FM
         }'''
     momentum = 1e-2
-    alpha = 1.9
-    delta = 3.0
+    alpha = 1.6
+    delta = 2.5
 
     def __init__(self, ltype='WIoU', monotonous=False):
         super().__init__()

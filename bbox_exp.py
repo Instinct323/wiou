@@ -201,13 +201,13 @@ def plot_gain(alpha_delta_imean=[[2.5, 2, .2],
         IouLoss.alpha, IouLoss.delta = adi[:2]
         iloss.iou_mean.mul_(adi[-1])
         plt.plot(liou, iloss._scaled_loss(torch.ones_like(liou), iou=liou), color=c,
-                 label=r'$\alpha=%.1f, \delta=%.1f, \overline{\mathcal{L}_{IoU}}=%.1f$' % tuple(adi))
+                 label=r'$\overline{\mathcal{L}_{IoU}}=%.1f$' % adi[-1])
     plt.plot(liou, torch.ones_like(liou), color='gray', linestyle='--', alpha=0.7)
     # Sets the format of the axes
     plt.xlabel('IoU loss')
     plt.ylabel('gradient gain')
     plt.yticks(*[[0.5, 1, 1.5] * 2])
-    plt.ylim([0, 1.8])
+    plt.ylim([0, 1.5])
     plt.legend(frameon=False)
     plt.show()
 
@@ -230,4 +230,10 @@ if __name__ == '__main__':
                                        colors=[purple, blue, green, pink]),
                lambda: plot_gain()]
 
-    command[-1]()
+    # command[-1]()
+
+    plot_gain(alpha_delta_imean=[[1.6, 2.5, .5],
+                                 [1.6, 2.5, .4],
+                                 [1.6, 2.5, .3],
+                                 [1.6, 2.5, .2]],
+              colors=[pink, blue, yellow, orange])
