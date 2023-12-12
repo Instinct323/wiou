@@ -232,8 +232,9 @@ if __name__ == '__main__':
 
     # command[-1]()
 
-    plot_gain(alpha_delta_imean=[[1.6, 2.5, .5],
-                                 [1.6, 2.5, .4],
-                                 [1.6, 2.5, .3],
-                                 [1.6, 2.5, .2]],
+    DEFAULT = [IouLoss.alpha, IouLoss.delta]
+    plot_gain(alpha_delta_imean=[[*DEFAULT, .5],
+                                 [*DEFAULT, .4],
+                                 [*DEFAULT, .3],
+                                 [*DEFAULT, .2]],
               colors=[pink, blue, yellow, orange])

@@ -19,7 +19,7 @@ m.iouloss = IouLoss(ltype='WIoU', monotonous=False)
 m.load_state_dict(torch.load('last.pt'))
 ```
 
-Modify the bounding box regression loss in the loss function. Note that the confidence of the bounding box uses $IoU$ instead of $\mathcal{L}_{WIoU}$.
+Modify the bounding box regression loss in the loss function. Note that the confidence of the bounding box uses $IoU$ instead of $1-\mathcal{L}_{WIoU}$.
 ```python
 m.iouloss.train()
 loss, liou = m.iouloss(xywh2xyxy(pred), xywh2xyxy(gt), ret_iou=True)
