@@ -183,10 +183,9 @@ def visualize_track(fcn_and_epoch: dict, lr=.01, colors=COLORS):
     plt.show()
 
 
-def plot_gain(alpha_delta_imean=[[2.5, 2, .2],
-                                 [1.9, 3, .2],
-                                 [1.6, 4, .2],
-                                 [1.4, 5, .2]],
+def plot_gain(alpha_delta_imean=[[1.9, 3, .2],
+                                 [1.7, 2.7, .2],
+                                 [1.6, 2.5, .2]],
               colors=[pink, blue, yellow, orange]):
     fig = plt.subplot()
     for key in 'right', 'top':
